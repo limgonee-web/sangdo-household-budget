@@ -249,23 +249,23 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 <!-- Bottom Tab Bar (mobile only) -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="bottom-tab active" id="btab-overview" onclick="showPageMobile('overview')">
+    <button class="bottom-tab active" id="btab-overview" onclick="showPage('overview')">
       <span class="bottom-tab-icon">📊</span>
       <span class="bottom-tab-label">요약</span>
     </button>
-    <button class="bottom-tab" id="btab-ledger" onclick="showPageMobile('ledger')">
+    <button class="bottom-tab" id="btab-ledger" onclick="showPage('ledger')">
       <span class="bottom-tab-icon">📒</span>
       <span class="bottom-tab-label">생활비</span>
     </button>
-    <button class="bottom-tab" id="btab-allowance-g" onclick="showPageMobile('allowance-g')">
+    <button class="bottom-tab" id="btab-allowance-g" onclick="showPage('allowance-g')">
       <span class="bottom-tab-icon">🌸</span>
       <span class="bottom-tab-label">고은</span>
     </button>
-    <button class="bottom-tab" id="btab-allowance-h" onclick="showPageMobile('allowance-h')">
+    <button class="bottom-tab" id="btab-allowance-h" onclick="showPage('allowance-h')">
       <span class="bottom-tab-icon">🎮</span>
       <span class="bottom-tab-label">형환</span>
     </button>
-    <button class="bottom-tab" id="btab-assets" onclick="showPageMobile('assets')">
+    <button class="bottom-tab" id="btab-assets" onclick="showPage('assets')">
       <span class="bottom-tab-icon">💰</span>
       <span class="bottom-tab-label">자산</span>
     </button>
@@ -611,10 +611,14 @@ function renderMonthList() {
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bottom-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
+  const btab = document.getElementById('btab-' + name);
+  if (btab) btab.classList.add('active');
   currentPage = name;
   renderCurrentPage();
+  window.scrollTo(0, 0);
 }
 
 function setMonth(m) {
@@ -1031,6 +1035,24 @@ function addNewMonth() {
   currentMonth = input;
   renderMonthList();
   renderCurrentPage();
+}
+
+
+// ── Month Drawer (mobile) ──
+function openMonthDrawer() {
+  const list = document.getElementById('month-drawer-list');
+  list.innerHTML = DB.months.map(m => {
+    const [y, mo] = m.split('-');
+    return `<button class="month-drawer-btn ${m === currentMonth ? 'active' : ''}"
+      onclick="setMonth('${m}');closeMonthDrawer()">
+      ${y}년 ${parseInt(mo)}월
+    </button>`;
+  }).join('');
+  document.getElementById('month-drawer-overlay').classList.add('open');
+}
+
+function closeMonthDrawer() {
+  document.getElementById('month-drawer-overlay').classList.remove('open');
 }
 
 // ── Init ──
