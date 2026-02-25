@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상도댁 가계부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: #fafafa; --surface2: #f4f4f5;
+  --border: #e4e4e7; --border-light: #f1f1f4;
+  --text: #09090b; --text-2: #52525b; --text-3: #a1a1aa;
+  --accent: #2563eb; --accent-soft: #eff6ff; --accent-border: #bfdbfe;
+  --green: #16a34a; --green-soft: #f0fdf4;
+  --red: #dc2626; --red-soft: #fef2f2;
+  --amber: #d97706; --amber-soft: #fffbeb;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* Shell */
+.app-shell { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 220px; flex-shrink: 0; border-right: 1px solid var(--border);
+  padding: 28px 0; position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; background: var(--bg); overflow-y: auto;
+}
+.logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.logo-title { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+.logo-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.nav-section { padding: 0 12px; margin-bottom: 8px; }
+.nav-label { font-size: 10px; font-weight: 500; color: var(--text-3); letter-spacing: 1px; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--text-2); transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: 'Noto Sans KR', sans-serif; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; }
+.month-section { padding: 16px 12px 0; border-top: 1px solid var(--border); margin-top: auto; }
+.month-label { font-size: 10px; color: var(--text-3); letter-spacing: 1px; text-transform: uppercase; padding: 0 8px; margin-bottom: 6px; }
+.month-btn { display: block; width: 100%; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text-2); transition: all 0.15s; border: none; background: none; text-align: left; font-family: 'Noto Sans KR', sans-serif; }
+.month-btn:hover { background: var(--surface2); }
+.month-btn.active { background: var(--text); color: white; font-weight: 500; }
+
+/* Main */
+.main { flex: 1; overflow: auto; }
+.page { display: none; padding: 36px 40px 60px; max-width: 960px; animation: fadeIn 0.2s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.page-desc { font-size: 13px; color: var(--text-3); margin-top: 3px; }
+
+/* Cards */
+.card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 14px; }
+
+/* Stats */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+.stat-label { font-size: 11px; color: var(--text-3); margin-bottom: 8px; font-weight: 500; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 19px; font-weight: 500; letter-spacing: -0.5px; }
+.stat-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 100px; margin-top: 6px; }
+.badge-green { background: var(--green-soft); color: var(--green); }
+.badge-red { background: var(--red-soft); color: var(--red); }
+.badge-amber { background: var(--amber-soft); color: var(--amber); }
+
+/* Budget bars */
+.budget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.budget-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.budget-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.budget-bar-track { height: 5px; background: var(--surface2); border-radius: 100px; overflow: hidden; margin-bottom: 8px; }
+.budget-bar-fill { height: 100%; border-radius: 100px; transition: width 0.7s ease; }
+.budget-nums { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-3); }
+
+/* Cat chart */
+.cat-list { display: flex; flex-direction: column; gap: 10px; }
+.cat-row { display: flex; align-items: center; gap: 10px; }
+.cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cat-name-text { font-size: 12px; min-width: 68px; color: var(--text-2); }
+.cat-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+.cat-fill { height: 100%; border-radius: 100px; }
+.cat-amount { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-2); min-width: 90px; text-align: right; }
+
+/* Layout helpers */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.three-col { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 20px; }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* Table */
+.scroll-box { max-height: 400px; overflow-y: auto; }
+.scroll-box::-webkit-scrollbar { width: 3px; }
+.scroll-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.data-table th { text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 500; color: var(--text-3); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--surface); }
+.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+.date-text { color: var(--text-3); font-size: 11px; font-family: 'DM Mono', monospace; }
+.in-amount { color: var(--green); font-family: 'DM Mono', monospace; font-size: 12px; }
+.out-amount { font-family: 'DM Mono', monospace; font-size: 12px; }
+.note-text { font-size: 11px; color: var(--text-3); }
+.tag { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
+
+/* Delete btn */
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 14px; padding: 2px 4px; border-radius: 4px; transition: all 0.15s; line-height: 1; }
+.del-btn:hover { color: var(--red); background: var(--red-soft); }
+
+/* Add button */
+.add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; }
+.add-btn:hover { background: #1d4ed8; }
+.add-btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: white; color: var(--text-2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; }
+.add-btn-outline:hover { background: var(--surface2); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; }
+.modal { background: white; border-radius: 14px; padding: 28px; width: 420px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.3px; }
+.modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-3); margin-top: -4px; }
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+.form-input, .form-select {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-family: 'Noto Sans KR', sans-serif; color: var(--text);
+  background: white; transition: all 0.15s; outline: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.btn-cancel { padding: 8px 16px; background: var(--surface2); border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; color: var(--text-2); }
+.btn-save { padding: 8px 18px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+.btn-save:hover { background: #1d4ed8; }
+
+/* Person card */
+.person-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.person-chip { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.chip-g { background: #fce7f3; } .chip-h { background: #dbeafe; }
+.person-info-name { font-size: 14px; font-weight: 700; }
+.person-info-bal { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+/* Asset */
+.asset-row-item { padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+.asset-row-item:last-child { border-bottom: none; }
+.asset-date-label { font-size: 11px; color: var(--text-3); font-family: 'DM Mono', monospace; margin-bottom: 10px; }
+.asset-persons-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.asset-person-cell { padding: 10px 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border-light); }
+.asset-person-name { font-size: 11px; color: var(--text-3); margin-bottom: 3px; }
+.asset-person-amt { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+.asset-totals { display: flex; justify-content: space-between; align-items: baseline; }
+.asset-total-label { font-size: 11px; color: var(--text-3); }
+.asset-total-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; }
+.growth-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; border: 1px solid var(--border); }
+
+/* Empty state */
+.empty { text-align: center; padding: 32px; color: var(--text-3); font-size: 13px; }
+
+/* Budget section */
+.budget-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.budget-edit-label { font-size: 12px; min-width: 70px; }
+.budget-edit-input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: 'DM Mono', monospace; }
+.budget-edit-input:focus { outline: none; border-color: var(--accent); }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .budget-grid, .two-col, .three-col { grid-template-columns: 1fr; }
+  .page { padding: 20px 16px 40px; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">🏠 상도댁 가계부</div>
+    <div class="logo-sub">고은 · 형환의 살림 기록</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">메뉴</div>
+    <button class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">📊</span>월간 요약</button>
+    <button class="nav-item" onclick="showPage('ledger',this)"><span class="nav-icon">📒</span>생활비 가계부</button>
+    <button class="nav-item" onclick="showPage('allowance-g',this)"><span class="nav-icon">🌸</span>고은 용돈</button>
+    <button class="nav-item" onclick="showPage('allowance-h',this)"><span class="nav-icon">🎮</span>형환 용돈</button>
+    <button class="nav-item" onclick="showPage('assets',this)"><span class="nav-icon">💰</span>자산 현황</button>
+  </div>
+  <div class="month-section">
+    <div class="month-label">월 선택</div>
+    <div id="month-list"></div>
+    <button class="add-btn-outline" style="margin-top:8px;width:100%;justify-content:center" onclick="addNewMonth()">+ 새 달 추가</button>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Overview -->
+  <div id="page-overview" class="page active">
+    <div class="page-header">
+      <div><div class="page-title" id="overview-title">월간 요약</div><div class="page-desc" id="overview-desc"></div></div>
+      <button class="add-btn-outline" onclick="openBudgetEdit()">⚙️ 예산 설정</button>
+    </div>
+    <div class="stat-grid" id="stat-cards"></div>
+    <div class="budget-grid" id="budget-bars"></div>
+    <div class="three-col">
+      <div class="card"><div class="card-title">카테고리별 지출</div><div class="cat-list" id="cat-chart"></div></div>
+      <div>
+        <div class="card" style="margin-bottom:12px" id="extras-g-card"></div>
+        <div class="card" id="extras-h-card"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ledger -->
+  <div id="page-ledger" class="page">
+    <div class="page-header">
+      <div><div class="page-title" id="ledger-title">생활비 가계부</div><div class="page-desc" id="ledger-desc"></div></div>
+      <button class="add-btn" onclick="openAddModal('ledger')">+ 내역 추가</button>
+    </div>
+    <div class="card">
+      <div class="scroll-box">
+        <table class="data-table">
+          <thead><tr><th>날짜</th><th>항목</th><th>상세</th><th style="text-align:right">금액</th><th style="text-align:right">잔액</th><th>비고</th><th></th></tr></thead>
+          <tbody id="ledger-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Allowance G -->
+  <div id="page-allowance-g" class="page">
+    <div class="page-header">
+      <div><div class="page-title">고은 용돈</div><div class="page-desc" id="ag-desc"></div></div>
+      <button class="add-btn" onclick="openAddModal('allowance-g')">+ 내역 추가</button>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="person-header">
+          <div class="person-chip chip-g">🌸</div>
+          <div><div class="person-info-name">고은</div><div class="person-info-bal" id="ag-bal">—</div></div>
+        </div>
+        <div class="scroll-box" style="max-height:360px">
+          <table class="data-table">
+            <thead><tr><th>날짜</th><th>항목</th><th>상세</th><th style="text-align:right">금액</th><th style="text-align:right">잔액</th><th></th></tr></thead>
+            <tbody id="ag-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">카테고리 분석</div><div class="cat-list" id="ag-cats"></div></div>
+    </div>
+  </div>
+
+  <!-- Allowance H -->
+  <div id="page-allowance-h" class="page">
+    <div class="page-header">
+      <div><div class="page-title">형환 용돈</div><div class="page-desc" id="ah-desc"></div></div>
+      <button class="add-btn" onclick="openAddModal('allowance-h')">+ 내역 추가</button>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="person-header">
+          <div class="person-chip chip-h">🎮</div>
+          <div><div class="person-info-name">형환</div><div class="person-info-bal" id="ah-bal">—</div></div>
+        </div>
+        <div class="scroll-box" style="max-height:360px">
+          <table class="data-table">
+            <thead><tr><th>날짜</th><th>항목</th><th>상세</th><th style="text-align:right">금액</th><th style="text-align:right">잔액</th><th></th></tr></thead>
+            <tbody id="ah-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">카테고리 분석</div><div class="cat-list" id="ah-cats"></div></div>
+    </div>
+  </div>
+
+  <!-- Assets -->
+  <div id="page-assets" class="page">
+    <div class="page-header">
+      <div><div class="page-title">자산 현황</div><div class="page-desc">전세보증금 3억 5천만원 포함 기준</div></div>
+      <button class="add-btn" onclick="openAddAssetModal()">+ 자산 기록</button>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title">자산 히스토리</div><div id="asset-list"></div></div>
+      <div class="card"><div class="card-title">✈️ 여행 저금통</div><div id="travel-list"></div><div style="margin-top:12px"><button class="add-btn-outline" onclick="openAddTravelModal()">+ 항목 추가</button></div></div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Modal container -->
+<div id="modal-root"></div>
+
+<script>
+// ── Constants ──
+const CAT_COLORS = {
+  '고정비':'#2563eb','식비':'#16a34a','생필품비':'#d97706','고양이비':'#9333ea',
+  '가족비':'#db2777','여행저금통':'#0891b2','경조사비':'#ea580c','입금':'#65a30d',
+  '취미':'#6366f1','미용':'#ec4899','관계':'#14b8a6','기타':'#78716c','선물':'#f59e0b',
+  '수입':'#22c55e','구독':'#8b5cf6','병원':'#ef4444','기타지출':'#f97316'
+};
+const LEDGER_CATS = ['입금','고정비','식비','생필품비','고양이비','가족비','여행저금통','경조사비','기타'];
+const ALLOWANCE_CATS = ['취미','미용','식비','관계','기타','수입','선물','구독','병원'];
+const BUDGET_CATS = ['고정비','식비','생필품비','고양이비'];
+const DEPOSIT = 350000000;
+
+// ── Storage ──
+const STORAGE_KEY = 'sangdo_v3';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return getDefaultData();
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+}
+
+function getDefaultData() {
+  return {
+    months: ['2026-02','2026-01','2025-12','2025-11','2025-10','2025-09'],
+    budget: {
+      '2026-02': {고정비:[1221182,1085702],식비:[550000,213160],생필품비:[150000,164500],고양이비:[50000,15730]},
+      '2026-01': {고정비:[1139072,1163239],식비:[550000,309730],생필품비:[150000,327810],고양이비:[50000,67000]},
+      '2025-12': {고정비:[1099072,1097332],식비:[600000,682376],생필품비:[100000,170460],고양이비:[50000,58390]},
+      '2025-11': {고정비:[1077082,985192],식비:[600000,393520],생필품비:[100000,172520],고양이비:[50000,0]},
+      '2025-10': {고정비:[1821022,1987832],식비:[600000,283290],생필품비:[100000,160530],고양이비:[50000,67000]},
+      '2025-09': {고정비:[1140000,1035582],식비:[600000,363130],생필품비:[100000,147260],고양이비:[0,96060]},
+    },
+    ledger: {
+      '2026-02': [
+        {id:uid(),date:'1/26',cat:'입금',desc:'전월 잔액',amt:217480,note:''},
+        {id:uid(),date:'1/26',cat:'입금',desc:'1월 생활비 입금',amt:1971182,note:'마이너스 입금'},
+        {id:uid(),date:'1/30',cat:'고정비',desc:'전세 이자',amt:828082,note:''},
+        {id:uid(),date:'2/1',cat:'고양이비',desc:'베란다 화분걸이',amt:15730,note:''},
+        {id:uid(),date:'2/1',cat:'생필품비',desc:'칼갈이',amt:17000,note:'다이소'},
+        {id:uid(),date:'2/1',cat:'고정비',desc:'넷플릭스',amt:18500,note:'형환 출금'},
+        {id:uid(),date:'2/1',cat:'고정비',desc:'네이버 멤버십',amt:4900,note:'고은 출금'},
+        {id:uid(),date:'2/1',cat:'가족비',desc:'일산 어머니 레드향',amt:25800,note:'자유로마트'},
+        {id:uid(),date:'2/1',cat:'생필품비',desc:'도마, 롤휴지, 스뎅 볼',amt:17000,note:'다이소'},
+        {id:uid(),date:'2/2',cat:'식비',desc:'된찌 재료',amt:15680,note:'GS'},
+        {id:uid(),date:'2/4',cat:'식비',desc:'파리바게뜨 빵',amt:6150,note:''},
+        {id:uid(),date:'2/6',cat:'식비',desc:'꾸브라꼬 치킨',amt:37400,note:''},
+        {id:uid(),date:'2/8',cat:'식비',desc:'찌개용 고기, 계란',amt:17900,note:''},
+        {id:uid(),date:'2/8',cat:'식비',desc:'두부, 우유, 버터, 파스타면',amt:22640,note:'컬리'},
+        {id:uid(),date:'2/8',cat:'생필품비',desc:'보풀제거기',amt:39800,note:''},
+        {id:uid(),date:'2/11',cat:'식비',desc:'수육용 고기',amt:16700,note:'복마니정육점'},
+        {id:uid(),date:'2/11',cat:'고정비',desc:'네이버 멤버십',amt:4900,note:''},
+        {id:uid(),date:'2/14',cat:'가족비',desc:'양가 설 선물 LA갈비',amt:184000,note:''},
+        {id:uid(),date:'2/13',cat:'식비',desc:'만두 등',amt:22990,note:''},
+        {id:uid(),date:'2/13',cat:'생필품비',desc:'논슬립테이프',amt:2000,note:'다이소'},
+        {id:uid(),date:'2/15',cat:'가족비',desc:'목동집 오렌지',amt:49800,note:''},
+        {id:uid(),date:'2/16',cat:'가족비',desc:'중산집 곶감 딸기',amt:30080,note:''},
+        {id:uid(),date:'2/16',cat:'생필품비',desc:'도시락통, 국자/젓가락',amt:68800,note:'스타필드'},
+        {id:uid(),date:'2/16',cat:'생필품비',desc:'포크',amt:7900,note:'모던하우스'},
+        {id:uid(),date:'2/17',cat:'식비',desc:'술안주, 막걸리',amt:5830,note:''},
+        {id:uid(),date:'2/19',cat:'식비',desc:'호식이 두마리 치킨',amt:28300,note:''},
+        {id:uid(),date:'2/18',cat:'생필품비',desc:'랜선',amt:10000,note:'다이소'},
+        {id:uid(),date:'2/20',cat:'고정비',desc:'1월 가스비',amt:229320,note:''},
+        {id:uid(),date:'2/22',cat:'생필품비',desc:'주방 세제',amt:2000,note:''},
+        {id:uid(),date:'2/22',cat:'식비',desc:'먹짱 페스타',amt:36470,note:'컬리'},
+        {id:uid(),date:'2/23',cat:'식비',desc:'막걸리',amt:3100,note:''},
+      ],
+      '2026-01': [
+        {id:uid(),date:'12/30',cat:'고정비',desc:'전세 이자',amt:801369,note:''},
+        {id:uid(),date:'1/1',cat:'식비',desc:'달걀, 우유, 새우 등',amt:41200,note:'컬리'},
+        {id:uid(),date:'1/1',cat:'생필품비',desc:'압력솥',amt:78500,note:''},
+        {id:uid(),date:'1/3',cat:'식비',desc:'사과',amt:70000,note:''},
+        {id:uid(),date:'1/4',cat:'식비',desc:'펩시 제로 라임',amt:30180,note:''},
+        {id:uid(),date:'1/9',cat:'고정비',desc:'12월 가스비',amt:171980,note:'난방비!'},
+        {id:uid(),date:'1/10',cat:'고양이비',desc:'레오 밥',amt:67000,note:'3달치'},
+        {id:uid(),date:'1/17',cat:'식비',desc:'KFC',amt:20900,note:''},
+        {id:uid(),date:'1/18',cat:'식비',desc:'우삼겹',amt:24800,note:''},
+        {id:uid(),date:'1/25',cat:'생필품비',desc:'쿠쿠 블렌더',amt:119960,note:''},
+        {id:uid(),date:'1/26',cat:'고정비',desc:'인터넷',amt:29700,note:''},
+        {id:uid(),date:'1/17',cat:'고정비',desc:'12월 관리비',amt:160190,note:'25일 출금'},
+      ],
+      '2025-12': [],
+      '2025-11': [],
+      '2025-10': [],
+      '2025-09': [],
+    },
+    allowanceG: {
+      '2026-02': {startBal:498956, items:[
+        {id:uid(),date:'2/1',cat:'취미',desc:'다이소 실',amt:6000,note:''},
+        {id:uid(),date:'2/2',cat:'미용',desc:'트러블 패치',amt:2496,note:''},
+        {id:uid(),date:'2/3',cat:'관계',desc:'언니 택시',amt:11100,note:''},
+        {id:uid(),date:'2/5',cat:'식비',desc:'붕어빵',amt:2000,note:''},
+        {id:uid(),date:'2/11',cat:'취미',desc:'뜨개 책',amt:14963,note:''},
+        {id:uid(),date:'2/12',cat:'미용',desc:'수분크림',amt:28260,note:''},
+        {id:uid(),date:'2/13',cat:'취미',desc:'핏3',amt:55000,note:''},
+        {id:uid(),date:'2/13',cat:'취미',desc:'프리렌',amt:44000,note:''},
+        {id:uid(),date:'2/16',cat:'취미',desc:'뜨개 실',amt:12000,note:''},
+        {id:uid(),date:'2/22',cat:'미용',desc:'애크논',amt:10000,note:''},
+        {id:uid(),date:'2/22',cat:'취미',desc:'뜨개 실',amt:10000,note:''},
+      ]},
+      '2026-01': {startBal:384832, items:[
+        {id:uid(),date:'1/3',cat:'미용',desc:'눈썹, 속눈썹',amt:60000,note:''},
+        {id:uid(),date:'1/15',cat:'미용',desc:'이솝 퓨리파잉',amt:58292,note:''},
+        {id:uid(),date:'1/24',cat:'기타',desc:'캐리어, 뜨롤리',amt:115720,note:''},
+        {id:uid(),date:'1/24',cat:'취미',desc:'뜨개 책',amt:27000,note:''},
+        {id:uid(),date:'1/31',cat:'취미',desc:'책',amt:19500,note:''},
+      ]},
+      '2025-12': {startBal:414189, items:[]},
+      '2025-11': {startBal:350000, items:[]},
+      '2025-10': {startBal:350000, items:[]},
+      '2025-09': {startBal:350000, items:[]},
+    },
+    allowanceH: {
+      '2026-02': {startBal:391339, items:[
+        {id:uid(),date:'2/2',cat:'식비',desc:'두쫀쿠',amt:15600,note:'맛이쩌'},
+        {id:uid(),date:'2/3',cat:'취미',desc:'알리-공구',amt:23700,note:''},
+        {id:uid(),date:'2/6',cat:'취미',desc:'알리-게임기 부품',amt:39350,note:''},
+        {id:uid(),date:'2/6',cat:'미용',desc:'이든헤어',amt:25000,note:''},
+        {id:uid(),date:'2/6',cat:'취미',desc:'알리-접지플러그, 전동칫솔',amt:27320,note:''},
+        {id:uid(),date:'2/12',cat:'식비',desc:'스타 회식',amt:30000,note:'하하'},
+        {id:uid(),date:'2/21',cat:'취미',desc:'플스 CD',amt:49000,note:''},
+        {id:uid(),date:'2/24',cat:'미용',desc:'넥타이 벨트',amt:64800,note:'유니클로'},
+        {id:uid(),date:'2/25',cat:'취미',desc:'카메라용품',amt:21925,note:'알리'},
+      ]},
+      '2026-01': {startBal:458401, items:[
+        {id:uid(),date:'1/2',cat:'취미',desc:'메가박스',amt:18800,note:''},
+        {id:uid(),date:'1/3',cat:'식비',desc:'커피 캡슐',amt:80000,note:'대박 비싸다'},
+        {id:uid(),date:'1/18',cat:'미용',desc:'자켓',amt:110000,note:''},
+        {id:uid(),date:'1/29',cat:'식비',desc:'두쫀쿠',amt:15000,note:'너무 건방져'},
+        {id:uid(),date:'1/31',cat:'식비',desc:'핏짜',amt:28000,note:''},
+      ]},
+      '2025-12': {startBal:378300, items:[]},
+      '2025-11': {startBal:350000, items:[]},
+      '2025-10': {startBal:350000, items:[]},
+      '2025-09': {startBal:350000, items:[]},
+    },
+    assets: [
+      {id:uid(),date:'2026. 1. 23',g:57154335,h:39088755},
+      {id:uid(),date:'2025. 12. 25',g:55233864,h:34397781},
+      {id:uid(),date:'2025. 11. 30',g:53328953,h:33423549},
+      {id:uid(),date:'2025. 10. 25',g:41214115,h:36300941},
+      {id:uid(),date:'2025. 9. 25',g:40912420,h:30000000},
+    ],
+    travel: [
+      {id:uid(),date:'25.11',desc:'11월 저금통',amt:400000},
+      {id:uid(),date:'25.12',desc:'12월 저금통',amt:400000},
+      {id:uid(),date:'26.1',desc:'1월 저금통',amt:400000},
+      {id:uid(),date:'26.1',desc:'이자',amt:1318},
+      {id:uid(),date:'26.1',desc:'제주도 비행기',amt:-88472},
+      {id:uid(),date:'26.2',desc:'나고야 비행기',amt:-878800},
+      {id:uid(),date:'26.2',desc:'나고야 숙소',amt:-381669},
+    ],
+  };
+}
+
+let DB = loadData();
+let currentMonth = DB.months[0] || '2026-02';
+let currentPage = 'overview';
+
+// ── Helpers ──
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+const fmt = n => n == null ? '—' : '₩' + Math.abs(Math.round(n)).toLocaleString();
+function tagStyle(cat) {
+  const c = CAT_COLORS[cat] || '#71717a';
+  return `background:${c}18;color:${c};border:1px solid ${c}28`;
+}
+
+// Compute running balances for ledger
+function computeLedgerBals(items) {
+  let bal = 0;
+  return items.map(r => {
+    const isIn = r.cat === '입금';
+    bal = isIn ? bal + r.amt : bal - r.amt;
+    return { ...r, bal };
+  });
+}
+
+function computeAllowanceBals(startBal, items) {
+  let bal = startBal;
+  return items.map(r => {
+    const isIn = r.cat === '수입';
+    bal = isIn ? bal + r.amt : bal - r.amt;
+    return { ...r, bal };
+  });
+}
+
+function computeTravelBals(items) {
+  let bal = 0;
+  return items.map(r => {
+    bal += r.amt;
+    return { ...r, runBal: bal };
+  });
+}
+
+// Compute total budget spent from ledger
+function computeSpentByBudgetCat(month) {
+  const ledger = DB.ledger[month] || [];
+  const spent = {};
+  BUDGET_CATS.forEach(c => spent[c] = 0);
+  ledger.forEach(r => {
+    if (BUDGET_CATS.includes(r.cat)) spent[r.cat] = (spent[r.cat]||0) + r.amt;
+  });
+  return spent;
+}
+
+// ── Month list ──
+function renderMonthList() {
+  const container = document.getElementById('month-list');
+  container.innerHTML = DB.months.map(m => {
+    const [y,mo] = m.split('-');
+    const label = y+'년 '+parseInt(mo)+'월';
+    return `<button class="month-btn ${m===currentMonth?'active':''}" onclick="setMonth('${m}')">${label}</button>`;
+  }).join('');
+}
+
+// ── Navigation ──
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  currentPage = name;
+  renderCurrentPage();
+}
+
+function setMonth(m) {
+  currentMonth = m;
+  renderMonthList();
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  if (currentPage === 'overview') renderOverview();
+  else if (currentPage === 'ledger') renderLedger();
+  else if (currentPage === 'allowance-g') renderAllowanceG();
+  else if (currentPage === 'allowance-h') renderAllowanceH();
+  else if (currentPage === 'assets') renderAssets();
+}
+
+// ── Overview ──
+function renderOverview() {
+  const [y,mo] = currentMonth.split('-');
+  document.getElementById('overview-title').textContent = y+'년 '+parseInt(mo)+'월 요약';
+
+  const budget = DB.budget[currentMonth] || {};
+  const spentByCat = computeSpentByBudgetCat(currentMonth);
+
+  let totalBudget = 0, totalSpent = 0;
+  BUDGET_CATS.forEach(c => {
+    totalBudget += (budget[c]?.[0] || 0);
+    totalSpent += spentByCat[c] || 0;
+  });
+  const rate = totalBudget > 0 ? (totalSpent/totalBudget*100) : 0;
+  const remaining = totalBudget - totalSpent;
+
+  document.getElementById('stat-cards').innerHTML = [
+    {label:'총 예산',val:fmt(totalBudget),sub:'이번 달 책정',badge:null},
+    {label:'총 지출',val:fmt(totalSpent),sub:'예산 대비 '+rate.toFixed(1)+'%',
+      badge:rate>100?'초과':rate>80?'주의':'양호',
+      bClass:rate>100?'badge-red':rate>80?'badge-amber':'badge-green'},
+    {label:'잔액',val:fmt(remaining),sub:remaining<0?'예산 초과':'남은 금액',
+      color:remaining<0?'var(--red)':'var(--green)',badge:null},
+    {label:'지출 건수',val:(DB.ledger[currentMonth]?.length||0)+'건',sub:'전체 내역',badge:null},
+  ].map(s => `<div class="stat-card">
+    <div class="stat-label">${s.label}</div>
+    <div class="stat-value"${s.color?` style="color:${s.color}"`:''}>${s.val}</div>
+    <div class="stat-sub">${s.sub}</div>
+    ${s.badge?`<span class="badge ${s.bClass}">${s.badge}</span>`:''}
+  </div>`).join('');
+
+  const budgetColors = ['#2563eb','#16a34a','#d97706','#9333ea'];
+  document.getElementById('budget-bars').innerHTML = BUDGET_CATS.map((cat,i) => {
+    const bud = budget[cat]?.[0] || 0;
+    const spent = spentByCat[cat] || 0;
+    const p = bud > 0 ? spent/bud*100 : 0;
+    const over = p > 100;
+    const color = over ? '#dc2626' : budgetColors[i];
+    return `<div class="budget-item">
+      <div class="budget-header">
+        <span style="font-size:12px;font-weight:600">${cat}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:${over?'var(--red)':color}">${p.toFixed(1)}%</span>
+      </div>
+      <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${Math.min(p,100)}%;background:${color}"></div></div>
+      <div class="budget-nums"><span>${fmt(spent)}</span><span>/ ${fmt(bud)}</span></div>
+    </div>`;
+  }).join('');
+
+  // Cat chart from ledger
+  const ledger = DB.ledger[currentMonth] || [];
+  const catTotals = {};
+  ledger.forEach(r => { if (r.cat !== '입금') catTotals[r.cat] = (catTotals[r.cat]||0)+r.amt; });
+  const maxAmt = Math.max(...Object.values(catTotals), 1);
+  document.getElementById('cat-chart').innerHTML = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).map(([cat,amt]) => {
+    const c = CAT_COLORS[cat] || '#71717a';
+    return `<div class="cat-row">
+      <div class="cat-dot" style="background:${c}"></div>
+      <div class="cat-name-text">${cat}</div>
+      <div class="cat-track"><div class="cat-fill" style="width:${(amt/maxAmt*100).toFixed(0)}%;background:${c}20;border-right:2px solid ${c}"></div></div>
+      <div class="cat-amount">${fmt(amt)}</div>
+    </div>`;
+  }).join('') || '<div class="empty">내역이 없어요</div>';
+
+  // Extras from allowance
+  const gItems = DB.allowanceG[currentMonth]?.items || [];
+  const hItems = DB.allowanceH[currentMonth]?.items || [];
+  const gTotal = gItems.reduce((s,i)=>i.cat==='수입'?s:s+i.amt,0);
+  const hTotal = hItems.reduce((s,i)=>i.cat==='수입'?s:s+i.amt,0);
+  document.getElementById('extras-g-card').innerHTML = `<div class="card-title">🌸 고은 용돈 지출</div><div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500">${fmt(gTotal)}</div><div style="font-size:11px;color:var(--text-3);margin-top:4px">${gItems.length}건</div>`;
+  document.getElementById('extras-h-card').innerHTML = `<div class="card-title">🎮 형환 용돈 지출</div><div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500">${fmt(hTotal)}</div><div style="font-size:11px;color:var(--text-3);margin-top:4px">${hItems.length}건</div>`;
+}
+
+// ── Ledger ──
+function renderLedger() {
+  const [y,mo] = currentMonth.split('-');
+  document.getElementById('ledger-title').textContent = y+'년 '+parseInt(mo)+'월 생활비';
+  const rows = DB.ledger[currentMonth] || [];
+  document.getElementById('ledger-desc').textContent = rows.length + '건의 내역';
+  const withBals = computeLedgerBals(rows);
+  document.getElementById('ledger-body').innerHTML = withBals.length ? withBals.map(r => {
+    const isIn = r.cat === '입금';
+    return `<tr>
+      <td><span class="date-text">${r.date}</span></td>
+      <td><span class="tag" style="${tagStyle(r.cat)}">${r.cat}</span></td>
+      <td style="font-size:12.5px">${r.desc}</td>
+      <td style="text-align:right"><span class="${isIn?'in-amount':'out-amount'}">${isIn?'+':'−'}${fmt(r.amt)}</span></td>
+      <td style="text-align:right"><span class="mono">${fmt(r.bal)}</span></td>
+      <td><span class="note-text">${r.note||''}</span></td>
+      <td><button class="del-btn" onclick="deleteItem('ledger','${r.id}')">×</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7" class="empty">내역이 없어요. [+ 내역 추가] 버튼을 눌러 추가하세요.</td></tr>`;
+}
+
+// ── Allowance ──
+function renderAllowanceG() {
+  const [y,mo] = currentMonth.split('-');
+  document.getElementById('ag-desc').textContent = y+'년 '+parseInt(mo)+'월 용돈 내역';
+  const data = DB.allowanceG[currentMonth] || {startBal:0,items:[]};
+  const withBals = computeAllowanceBals(data.startBal, data.items);
+  const finalBal = withBals.length ? withBals[withBals.length-1].bal : data.startBal;
+  document.getElementById('ag-bal').textContent = '현재 잔액 ' + fmt(finalBal);
+  document.getElementById('ag-body').innerHTML = withBals.length ? withBals.map(r => {
+    const isIn = r.cat === '수입';
+    return `<tr>
+      <td><span class="date-text">${r.date}</span></td>
+      <td><span class="tag" style="${tagStyle(r.cat)}">${r.cat}</span></td>
+      <td style="font-size:12px">${r.desc}${r.note?` <span class="note-text">(${r.note})</span>`:''}</td>
+      <td style="text-align:right"><span class="${isIn?'in-amount':'out-amount'}">${isIn?'+':'−'}${fmt(r.amt)}</span></td>
+      <td style="text-align:right"><span class="mono">${fmt(r.bal)}</span></td>
+      <td><button class="del-btn" onclick="deleteItem('allowanceG','${r.id}')">×</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="empty">내역이 없어요</td></tr>`;
+  renderCatMini(data.items, 'ag-cats');
+}
+
+function renderAllowanceH() {
+  const [y,mo] = currentMonth.split('-');
+  document.getElementById('ah-desc').textContent = y+'년 '+parseInt(mo)+'월 용돈 내역';
+  const data = DB.allowanceH[currentMonth] || {startBal:0,items:[]};
+  const withBals = computeAllowanceBals(data.startBal, data.items);
+  const finalBal = withBals.length ? withBals[withBals.length-1].bal : data.startBal;
+  document.getElementById('ah-bal').textContent = '현재 잔액 ' + fmt(finalBal);
+  document.getElementById('ah-body').innerHTML = withBals.length ? withBals.map(r => {
+    const isIn = r.cat === '수입';
+    return `<tr>
+      <td><span class="date-text">${r.date}</span></td>
+      <td><span class="tag" style="${tagStyle(r.cat)}">${r.cat}</span></td>
+      <td style="font-size:12px">${r.desc}${r.note?` <span class="note-text">(${r.note})</span>`:''}</td>
+      <td style="text-align:right"><span class="${isIn?'in-amount':'out-amount'}">${isIn?'+':'−'}${fmt(r.amt)}</span></td>
+      <td style="text-align:right"><span class="mono">${fmt(r.bal)}</span></td>
+      <td><button class="del-btn" onclick="deleteItem('allowanceH','${r.id}')">×</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="empty">내역이 없어요</td></tr>`;
+  renderCatMini(data.items, 'ah-cats');
+}
+
+function renderCatMini(items, elId) {
+  const totals = {};
+  items.forEach(i => { if (i.cat !== '수입') totals[i.cat] = (totals[i.cat]||0)+i.amt; });
+  const maxAmt = Math.max(...Object.values(totals), 1);
+  document.getElementById(elId).innerHTML = Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([cat,amt]) => {
+    const c = CAT_COLORS[cat] || '#71717a';
+    return `<div class="cat-row">
+      <div class="cat-dot" style="background:${c}"></div>
+      <div class="cat-name-text">${cat}</div>
+      <div class="cat-track"><div class="cat-fill" style="width:${(amt/maxAmt*100).toFixed(0)}%;background:${c}20;border-right:2px solid ${c}"></div></div>
+      <div class="cat-amount">${fmt(amt)}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--text-3)">내역 없음</div>';
+}
+
+// ── Assets ──
+function renderAssets() {
+  const assets = DB.assets;
+  let assetHTML = '';
+  if (assets.length >= 2) {
+    const t0 = (assets[0].g||0) + (assets[0].h||0);
+    const t1 = (assets[1].g||0) + (assets[1].h||0);
+    const growth = t0 - t1;
+    const isPos = growth >= 0;
+    assetHTML += `<div class="growth-bar" style="background:${isPos?'var(--green-soft)':'var(--red-soft)'};border-color:${isPos?'#bbf7d0':'#fecaca'}">
+      <div style="font-size:11px;color:var(--text-3);flex:1">최근 한 달 자산 변화</div>
+      <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:${isPos?'var(--green)':'var(--red)'}">${isPos?'+':''}${fmt(growth)}</div>
+    </div>`;
+  }
+  assetHTML += assets.map(a => {
+    const total = (a.g||0)+(a.h||0);
+    return `<div class="asset-row-item">
+      <div class="asset-date-label">${a.date}</div>
+      <div class="asset-persons-row">
+        <div class="asset-person-cell"><div class="asset-person-name">🌸 고은</div><div class="asset-person-amt">${fmt(a.g)}</div></div>
+        <div class="asset-person-cell"><div class="asset-person-name">🎮 형환</div><div class="asset-person-amt">${fmt(a.h)}</div></div>
+      </div>
+      <div class="asset-totals">
+        <div><div class="asset-total-label">합산</div><div class="asset-total-val">${fmt(total)}</div></div>
+        <div style="text-align:right"><div class="asset-total-label">전세 포함</div><div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--accent)">${fmt(total+DEPOSIT)}</div></div>
+      </div>
+      <div style="text-align:right;margin-top:6px"><button class="del-btn" onclick="deleteAsset('${a.id}')">× 삭제</button></div>
+    </div>`;
+  }).join('');
+  document.getElementById('asset-list').innerHTML = assetHTML || '<div class="empty">자산 기록이 없어요</div>';
+
+  const travelWithBals = computeTravelBals(DB.travel);
+  document.getElementById('travel-list').innerHTML = travelWithBals.map(t => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-light)">
+      <div style="font-size:11px;color:var(--text-3);width:48px;font-family:'DM Mono',monospace">${t.date}</div>
+      <div style="font-size:12px;flex:1">${t.desc}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:${t.amt>=0?'var(--green)':'var(--red)'}">${t.amt>=0?'+':''}${fmt(Math.abs(t.amt))}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-3);min-width:72px;text-align:right">${fmt(t.runBal)}</div>
+      <button class="del-btn" onclick="deleteTravelItem('${t.id}')">×</button>
+    </div>`).join('') || '<div class="empty">항목 없음</div>';
+}
+
+// ── Delete ──
+function deleteItem(type, id) {
+  if (type === 'ledger') {
+    DB.ledger[currentMonth] = (DB.ledger[currentMonth]||[]).filter(r=>r.id!==id);
+  } else if (type === 'allowanceG') {
+    DB.allowanceG[currentMonth].items = DB.allowanceG[currentMonth].items.filter(r=>r.id!==id);
+  } else if (type === 'allowanceH') {
+    DB.allowanceH[currentMonth].items = DB.allowanceH[currentMonth].items.filter(r=>r.id!==id);
+  }
+  saveData(); renderCurrentPage();
+}
+function deleteAsset(id) { DB.assets = DB.assets.filter(a=>a.id!==id); saveData(); renderAssets(); }
+function deleteTravelItem(id) { DB.travel = DB.travel.filter(t=>t.id!==id); saveData(); renderAssets(); }
+
+// ── Modals ──
+function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
+
+function openAddModal(type) {
+  const isLedger = type === 'ledger';
+  const isG = type === 'allowance-g';
+  const cats = isLedger ? LEDGER_CATS : ALLOWANCE_CATS;
+  const title = isLedger ? '생활비 내역 추가' : (isG ? '고은 용돈 추가' : '형환 용돈 추가');
+  const [,mo] = currentMonth.split('-');
+
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-title">${title}</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">날짜</label>
+          <input class="form-input" id="f-date" placeholder="${mo}/1" value="${mo}/">
+        </div>
+        <div class="form-group">
+          <label class="form-label">항목</label>
+          <select class="form-select" id="f-cat">
+            ${cats.map(c=>`<option value="${c}">${c}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">상세 내용</label>
+        <input class="form-input" id="f-desc" placeholder="예: 마트 장보기">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">금액 (원)</label>
+          <input class="form-input" id="f-amt" type="number" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">비고 (선택)</label>
+          <input class="form-input" id="f-note" placeholder="예: 쿠팡, 다이소">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-save" onclick="saveItem('${type}')">저장</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('f-desc').focus();
+}
+
+function saveItem(type) {
+  const date = document.getElementById('f-date').value.trim();
+  const cat = document.getElementById('f-cat').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  const amt = parseFloat(document.getElementById('f-amt').value) || 0;
+  const note = document.getElementById('f-note').value.trim();
+  if (!desc || !date) return alert('날짜와 내용을 입력해 주세요.');
+  const item = {id:uid(),date,cat,desc,amt,note};
+  if (type === 'ledger') {
+    if (!DB.ledger[currentMonth]) DB.ledger[currentMonth] = [];
+    DB.ledger[currentMonth].push(item);
+    // Update budget spent
+    if (BUDGET_CATS.includes(cat) && DB.budget[currentMonth]) {
+      DB.budget[currentMonth][cat][1] = (DB.budget[currentMonth][cat][1]||0) + amt;
+    }
+  } else if (type === 'allowance-g') {
+    if (!DB.allowanceG[currentMonth]) DB.allowanceG[currentMonth] = {startBal:0,items:[]};
+    DB.allowanceG[currentMonth].items.push(item);
+  } else if (type === 'allowance-h') {
+    if (!DB.allowanceH[currentMonth]) DB.allowanceH[currentMonth] = {startBal:0,items:[]};
+    DB.allowanceH[currentMonth].items.push(item);
+  }
+  saveData(); closeModal(); renderCurrentPage();
+}
+
+function openAddAssetModal() {
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-title">자산 기록 추가</div>
+      <div class="form-group">
+        <label class="form-label">날짜</label>
+        <input class="form-input" id="f-adate" placeholder="예: 2026. 2. 25">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">고은 자산 (원)</label>
+          <input class="form-input" id="f-ag" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">형환 자산 (원)</label>
+          <input class="form-input" id="f-ah" type="number" placeholder="0">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-save" onclick="saveAsset()">저장</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveAsset() {
+  const date = document.getElementById('f-adate').value.trim();
+  const g = parseFloat(document.getElementById('f-ag').value)||0;
+  const h = parseFloat(document.getElementById('f-ah').value)||0;
+  if (!date) return alert('날짜를 입력해 주세요.');
+  DB.assets.unshift({id:uid(),date,g,h,total:g+h});
+  saveData(); closeModal(); renderAssets();
+}
+
+function openAddTravelModal() {
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-title">여행 저금통 항목 추가</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">날짜 (예: 26.2)</label>
+          <input class="form-input" id="f-tdate" placeholder="26.2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">금액 (출금은 마이너스)</label>
+          <input class="form-input" id="f-tamt" type="number" placeholder="400000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">내용</label>
+        <input class="form-input" id="f-tdesc" placeholder="예: 3월 저금통, 도쿄 비행기">
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-save" onclick="saveTravel()">저장</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveTravel() {
+  const date = document.getElementById('f-tdate').value.trim();
+  const amt = parseFloat(document.getElementById('f-tamt').value)||0;
+  const desc = document.getElementById('f-tdesc').value.trim();
+  if (!desc || !date) return alert('날짜와 내용을 입력해 주세요.');
+  DB.travel.push({id:uid(),date,desc,amt});
+  saveData(); closeModal(); renderAssets();
+}
+
+function openBudgetEdit() {
+  const budget = DB.budget[currentMonth] || {};
+  document.getElementById('modal-root').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-title">예산 설정</div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:16px">이번 달 카테고리별 예산을 설정하세요</div>
+      ${BUDGET_CATS.map(cat => `
+        <div class="budget-edit-row">
+          <span class="budget-edit-label">${cat}</span>
+          <input class="budget-edit-input" id="bud-${cat}" type="number" value="${budget[cat]?.[0]||0}" placeholder="0">
+        </div>`).join('')}
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeModal()">취소</button>
+        <button class="btn-save" onclick="saveBudget()">저장</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveBudget() {
+  if (!DB.budget[currentMonth]) DB.budget[currentMonth] = {};
+  BUDGET_CATS.forEach(cat => {
+    const val = parseFloat(document.getElementById('bud-'+cat).value)||0;
+    const existing = DB.budget[currentMonth][cat] || [0,0];
+    DB.budget[currentMonth][cat] = [val, existing[1]];
+  });
+  saveData(); closeModal(); renderCurrentPage();
+}
+
+function addNewMonth() {
+  const input = prompt('새 달을 추가하세요 (예: 2026-03)');
+  if (!input || !/^\d{4}-\d{2}$/.test(input)) return;
+  if (DB.months.includes(input)) return alert('이미 있는 달이에요.');
+  DB.months.unshift(input);
+  DB.ledger[input] = [];
+  DB.budget[input] = {고정비:[0,0],식비:[0,0],생필품비:[0,0],고양이비:[0,0]};
+  DB.allowanceG[input] = {startBal:0,items:[]};
+  DB.allowanceH[input] = {startBal:0,items:[]};
+  saveData();
+  currentMonth = input;
+  renderMonthList();
+  renderCurrentPage();
+}
+
+// ── Init ──
+renderMonthList();
+renderCurrentPage();
+</script>
+</body>
+</html>
