@@ -167,11 +167,58 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .budget-edit-input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: 'DM Mono', monospace; }
 .budget-edit-input:focus { outline: none; border-color: var(--accent); }
 
+/* ── Mobile bottom tab bar ── */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg); border-top: 1px solid var(--border);
+  z-index: 50; padding-bottom: env(safe-area-inset-bottom);
+}
+.bottom-nav-inner {
+  display: flex; align-items: stretch; height: 56px;
+}
+.bottom-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; border: none; background: none;
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text-3); transition: color 0.15s; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-tab.active { color: var(--accent); }
+.bottom-tab-icon { font-size: 18px; line-height: 1; }
+.bottom-tab-label { font-size: 10px; font-weight: 500; }
+
+/* ── Mobile month drawer ── */
+.month-drawer-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 80; align-items: flex-end;
+}
+.month-drawer-overlay.open { display: flex; }
+.month-drawer {
+  background: white; border-radius: 16px 16px 0 0; padding: 20px 16px 32px;
+  width: 100%; max-height: 70vh; overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.month-drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.month-drawer-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.month-drawer-btn {
+  display: block; width: 100%; padding: 12px 14px; border-radius: 8px;
+  border: none; background: none; text-align: left; font-size: 14px;
+  font-family: 'Noto Sans KR', sans-serif; color: var(--text-2); cursor: pointer;
+  transition: background 0.1s;
+}
+.month-drawer-btn:hover { background: var(--surface2); }
+.month-drawer-btn.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
 @media (max-width: 768px) {
   .sidebar { display: none; }
+  .bottom-nav { display: block; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .budget-grid, .two-col, .three-col { grid-template-columns: 1fr; }
-  .page { padding: 20px 16px 40px; }
+  .page { padding: 16px 16px 80px; }
+  .page-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+  .page-header > div:last-child { align-self: flex-end; }
 }
 </style>
 </head>
@@ -198,6 +245,46 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
     <button class="add-btn-outline" style="margin-top:8px;width:100%;justify-content:center" onclick="addNewMonth()">+ 새 달 추가</button>
   </div>
 </aside>
+
+<!-- Bottom Tab Bar (mobile only) -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-tab active" id="btab-overview" onclick="showPageMobile('overview')">
+      <span class="bottom-tab-icon">📊</span>
+      <span class="bottom-tab-label">요약</span>
+    </button>
+    <button class="bottom-tab" id="btab-ledger" onclick="showPageMobile('ledger')">
+      <span class="bottom-tab-icon">📒</span>
+      <span class="bottom-tab-label">생활비</span>
+    </button>
+    <button class="bottom-tab" id="btab-allowance-g" onclick="showPageMobile('allowance-g')">
+      <span class="bottom-tab-icon">🌸</span>
+      <span class="bottom-tab-label">고은</span>
+    </button>
+    <button class="bottom-tab" id="btab-allowance-h" onclick="showPageMobile('allowance-h')">
+      <span class="bottom-tab-icon">🎮</span>
+      <span class="bottom-tab-label">형환</span>
+    </button>
+    <button class="bottom-tab" id="btab-assets" onclick="showPageMobile('assets')">
+      <span class="bottom-tab-icon">💰</span>
+      <span class="bottom-tab-label">자산</span>
+    </button>
+    <button class="bottom-tab" id="btab-month" onclick="openMonthDrawer()">
+      <span class="bottom-tab-icon">📅</span>
+      <span class="bottom-tab-label">월 선택</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Month Drawer (mobile) -->
+<div class="month-drawer-overlay" id="month-drawer-overlay" onclick="if(event.target===this)closeMonthDrawer()">
+  <div class="month-drawer">
+    <div class="month-drawer-handle"></div>
+    <div class="month-drawer-title">월 선택</div>
+    <div id="month-drawer-list"></div>
+    <button class="month-drawer-btn" style="color:var(--accent);margin-top:8px;font-weight:600" onclick="addNewMonth();closeMonthDrawer()">+ 새 달 추가</button>
+  </div>
+</div>
 
 <!-- Main -->
 <main class="main">
